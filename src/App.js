@@ -2,11 +2,30 @@ import React from 'react';
 import './App.css';
 import SidebarComponent from './sidebar/sidebar'
 import EditorComponent from './editor/editor'
-import { firebase} from '@firebase/app';
+import firebase from 'firebase';
+import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
 
 
 class App extends React.Component {
+   state = { isSignedIn: false}
+   uiConfig = {
+     signInFlow :"popup",
+     signInOptions:[
+       firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+       firebase.auth.GithubAuthProvider.PROVIDER_ID,
+       firebase.auth.EmailAuthProvider.PROVIDER_ID
+     ],
+     callbacks: {
+       signInSuccess: () => false
+     }
 
+   }
+   componentDidMount = () => {
+     firebase.auth().onAuthStateChanged(user => {
+       this.setState({ isSignedIn:!!user})
+       console.log("user",user)
+     })
+   }
   constructor(){
     super()
     this.state = {
@@ -17,8 +36,22 @@ class App extends React.Component {
   }
   render(){
     return(
+     
     <div className = "app-container">
-    
+    {this.state.isSignedIn ? (
+      <span>
+        <div>Signed In</div>
+        <button onClick = {() => firebase.auth().signOut()}>Sign out!</button>
+        <h1>Welcome {firebase.auth().currentUser.displayName}</h1>
+        <img alt ="userPic" src= {firebase.auth().currentUser.photoURL}/>
+      </span>
+    ) : (
+      <StyledFirebaseAuth
+      uiConfig = { this.uiConfig}
+      firebaseAuth = {firebase.auth()}
+      />
+    )
+    };
       <SidebarComponent 
       selectedNoteIndex = {this.state.selectedNoteIndex}
       notes= {this.state.notes}
